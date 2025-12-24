@@ -42,7 +42,12 @@ final class AppState: ObservableObject {
 
     init() {
         if let snapshot = PersistenceStore.shared.load() {
-            self.preferences = snapshot.preferences
+            var loadedPreferences = snapshot.preferences
+            // Migration: If interval is 60 (old default), change to 5 (new default)
+            if loadedPreferences.jiggleInterval == 60.0 {
+                loadedPreferences.jiggleInterval = 5.0
+            }
+            self.preferences = loadedPreferences
             self.manualSimulateActivity = snapshot.manualSimulateActivity
         } else {
             self.preferences = .default

@@ -22,7 +22,7 @@ struct Preferences: Codable {
         logRetentionDays: 30,
         restorePreviousState: true,
         jiggleDistance: 50.0,
-        jiggleInterval: 60.0,
+        jiggleInterval: 5.0,
         showInDock: false
     )
 }
