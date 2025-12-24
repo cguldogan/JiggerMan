@@ -31,6 +31,10 @@ jobs:
             -derivedDataPath build \
             -destination 'platform=macOS' \
             MARKETING_VERSION=$VERSION \
+            CODE_SIGN_IDENTITY="-" \
+            CODE_SIGN_STYLE="Manual" \
+            DEVELOPMENT_TEAM="" \
+            PROVISIONING_PROFILE_SPECIFIER="" \
             clean build
 
       - name: Create DMG
