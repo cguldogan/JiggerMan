@@ -21,6 +21,7 @@
     -   **Right-click** (or Control-click) the app in your Applications folder.
     -   Select **Open**.
     -   Click **Open** in the dialog box to confirm.
+    -   **If that doesn't work**: Go to **System Settings > Privacy & Security**, scroll down to the **Security** section, and click **Open Anyway** next to the message "JiggerMan was blocked...".
 
 ## How to Use
 
