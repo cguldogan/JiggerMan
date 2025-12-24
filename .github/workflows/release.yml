@@ -1,0 +1,55 @@
+name: Release macOS App
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+
+      - name: Build App
+        run: |
+          cd JiggerMan
+          xcodebuild -scheme JiggerMan \
+            -configuration Release \
+            -derivedDataPath build \
+            -destination 'platform=macOS' \
+            clean build
+
+      - name: Create DMG
+        run: |
+          brew install create-dmg
+          cd JiggerMan
+          test -f "build/Build/Products/Release/JiggerMan.app/Contents/Info.plist" || { echo "App not found"; exit 1; }
+          
+          create-dmg \
+            --volname "JiggerMan Installer" \
+            --window-pos 200 120 \
+            --window-size 800 400 \
+            --icon-size 100 \
+            --icon "JiggerMan.app" 200 190 \
+            --hide-extension "JiggerMan.app" \
+            --app-drop-link 600 185 \
+            "JiggerMan.dmg" \
+            "build/Build/Products/Release/JiggerMan.app"
+
+      - name: Upload Release Asset
+        uses: softprops/action-gh-release@v1
+        with:
+          files: JiggerMan/JiggerMan.dmg
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

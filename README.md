@@ -9,6 +9,15 @@
 - **Discreet**: Runs quietly in your menu bar. You can choose to hide it from the Dock.
 - **Privacy Focused**: No data is sent to the cloud. Everything runs locally on your Mac.
 
+## Installation
+
+1.  Download the latest `JiggerMan.dmg` from the [Releases](../../releases) page.
+2.  Open the `.dmg` file and drag **JiggerMan** to your **Applications** folder.
+3.  **Important**: Since this app is not signed by Apple, you may see a security warning.
+    -   **Right-click** (or Control-click) the app in your Applications folder.
+    -   Select **Open**.
+    -   Click **Open** in the dialog box to confirm.
+
 ## How to Use
 
 1.  **Launch the app**: You'll see a small mouse icon in your menu bar (top right of your screen).
