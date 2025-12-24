@@ -27,7 +27,23 @@ struct ContentView: View {
                 }
         }
         .frame(minWidth: 500, minHeight: 350)
+        .background(WindowAccessor())
     }
+}
+
+struct WindowAccessor: NSViewRepresentable {
+    func makeNSView(context: Context) -> NSView {
+        let view = NSView()
+        DispatchQueue.main.async {
+            if let window = view.window {
+                window.level = .floating
+                window.orderFrontRegardless()
+            }
+        }
+        return view
+    }
+
+    func updateNSView(_ nsView: NSView, context: Context) {}
 }
 
 #Preview {

@@ -31,6 +31,9 @@ struct MenuContent: View {
                 }
                 .buttonStyle(MenuButtonStyle())
                 .keyboardShortcut(",")
+                .simultaneousGesture(TapGesture().onEnded {
+                    NSApp.activate(ignoringOtherApps: true)
+                })
             } else {
                 Button {
                     openSettings()
