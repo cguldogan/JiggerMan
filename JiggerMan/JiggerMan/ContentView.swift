@@ -14,11 +14,17 @@ struct ContentView: View {
     var body: some View {
         TabView {
             generalTab
-                .tabItem { Text("General") }
+                .tabItem {
+                    Label("General", systemImage: "gear")
+                }
             logsTab
-                .tabItem { Text("Logs") }
+                .tabItem {
+                    Label("Logs", systemImage: "list.bullet.rectangle")
+                }
             aboutTab
-                .tabItem { Text("About") }
+                .tabItem {
+                    Label("About", systemImage: "info.circle")
+                }
         }
         .frame(minWidth: 400, minHeight: 300)
     }
