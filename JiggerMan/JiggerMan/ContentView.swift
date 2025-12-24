@@ -26,7 +26,7 @@ struct ContentView: View {
                     Label("About", systemImage: "info.circle")
                 }
         }
-        .frame(minWidth: 500, minHeight: 350)
+        .frame(width: 400, height: 350)
         .background(WindowAccessor())
     }
 }
