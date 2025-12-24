@@ -1,5 +1,7 @@
 # JiggerMan
 
+<img src="JiggerMan/Assets/icons/Icon-iOS-Default-1024x1024@1x.png" width="128" height="128" alt="JiggerMan Icon">
+
 [![Latest Version](https://img.shields.io/github/v/tag/cguldogan/JiggerMan?label=version)](https://github.com/cguldogan/JiggerMan/tags)
 
 **JiggerMan** is a simple macOS utility designed to keep your computer awake and active. It prevents your status from going "Away" or "Idle" in applications like Microsoft Teams, Slack, or Discord by simulating subtle mouse movements.
