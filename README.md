@@ -1,5 +1,7 @@
 # JiggerMan
 
+[![Latest Release](https://img.shields.io/github/v/release/cguldogan/JiggerMan?label=latest%20release)](https://github.com/cguldogan/JiggerMan/releases/latest)
+
 **JiggerMan** is a simple macOS utility designed to keep your computer awake and active. It prevents your status from going "Away" or "Idle" in applications like Microsoft Teams, Slack, or Discord by simulating subtle mouse movements.
 
 ## Features
@@ -11,7 +13,7 @@
 
 ## Installation
 
-1.  Download the latest `JiggerMan.dmg` from the [Releases](../../releases) page.
+1.  Download the latest `JiggerMan.dmg` from the [Latest Release](https://github.com/cguldogan/JiggerMan/releases/latest) page.
 2.  Open the `.dmg` file and drag **JiggerMan** to your **Applications** folder.
 3.  **Important**: Since this app is not signed by Apple, you may see a security warning.
     -   **Right-click** (or Control-click) the app in your Applications folder.
