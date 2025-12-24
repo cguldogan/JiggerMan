@@ -2,35 +2,42 @@ import SwiftUI
 
 struct MenuContent: View {
     @ObservedObject var appState: AppState
+    @State private var isHoveringToggle = false
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 4) {
             // Toggle Row
             Toggle(isOn: $appState.manualSimulateActivity) {
                 Label("Simulate Activity", systemImage: "cursorarrow.motionlines")
                     .font(.body)
+                    .frame(maxWidth: .infinity, alignment: .leading)
             }
             .toggleStyle(.switch)
             .controlSize(.mini)
+            .padding(.vertical, 4)
+            .padding(.horizontal, 8)
+            .background(isHoveringToggle ? Color.accentColor : Color.clear)
+            .foregroundStyle(isHoveringToggle ? .white : .primary)
+            .cornerRadius(4)
+            .onHover { isHoveringToggle = $0 }
             
             Divider()
+                .padding(.vertical, 4)
             
             // Settings Button
             if #available(macOS 14.0, *) {
                 SettingsLink {
                     Label("Open Settings", systemImage: "gear")
-                        .frame(maxWidth: .infinity, alignment: .leading)
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(MenuButtonStyle())
                 .keyboardShortcut(",")
             } else {
                 Button {
                     openSettings()
                 } label: {
                     Label("Open Settings", systemImage: "gear")
-                        .frame(maxWidth: .infinity, alignment: .leading)
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(MenuButtonStyle())
                 .keyboardShortcut(",")
             }
             
@@ -39,12 +46,11 @@ struct MenuContent: View {
                 NSApp.terminate(nil)
             } label: {
                 Label("Quit JiggerMan", systemImage: "power")
-                    .frame(maxWidth: .infinity, alignment: .leading)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(MenuButtonStyle())
             .keyboardShortcut("q")
         }
-        .padding()
+        .padding(8)
         .frame(width: 220)
     }
     
@@ -56,6 +62,28 @@ struct MenuContent: View {
             NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
         } else {
             NSApp.sendAction(Selector(("showPreferencesWindow:")), to: nil, from: nil)
+        }
+    }
+}
+
+struct MenuButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        HoverButton(configuration: configuration)
+    }
+    
+    struct HoverButton: View {
+        let configuration: Configuration
+        @State private var isHovering = false
+        
+        var body: some View {
+            configuration.label
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.vertical, 4)
+                .padding(.horizontal, 8)
+                .background(isHovering ? Color.accentColor : Color.clear)
+                .foregroundStyle(isHovering ? .white : .primary)
+                .cornerRadius(4)
+                .onHover { isHovering = $0 }
         }
     }
 }
