@@ -23,14 +23,14 @@
     -   Click **Open** in the dialog box to confirm.
     -   **If that doesn't work**: Go to **System Settings > Privacy & Security**, scroll down to the **Security** section, and click **Open Anyway** next to the message "JiggerMan was blocked...".
         
-        <img src="JiggerMan/Assets/screenshots/security.png" width="500" alt="Security Open Anyway">
+        <img src="JiggerMan/Assets/doc/image2.png" width="500" alt="Security Open Anyway">
 
 ## How to Use
 
 1.  **Launch the app**: You'll see a small mouse icon in your menu bar (top right of your screen).
 2.  **Grant Permissions**: The app requires Accessibility permissions to move the mouse. Go to **System Settings > Privacy & Security > Accessibility** and enable JiggerMan.
     
-    <img src="JiggerMan/Assets/screenshots/accessibility.png" width="500" alt="Accessibility Permissions">
+    <img src="JiggerMan/Assets/doc/image.png" width="500" alt="Accessibility Permissions">
 
 3.  **Start Jiggling**: Click the menu bar icon, open **Settings**, and toggle **Simulate Activity**.
 4.  **Customize**: You can change the "Jiggle Distance" or toggle "Show in Dock" in the settings.
