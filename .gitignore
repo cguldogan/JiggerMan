@@ -1,0 +1,38 @@
+# Xcode
+#
+# gitignore contributors: remember to update Global/Xcode.gitignore, Objective-C.gitignore & Swift.gitignore
+
+## User settings
+xcuserdata/
+
+## Compatibility
+*.swp
+*~.nib
+
+## Patch
+*.patch
+
+## SCM
+.svn/
+.CVS/
+.bzr/
+.hg/
+.git/
+
+## Project generation
+build/
+DerivedData/
+*.hmap
+*.ipa
+*.dSYM.zip
+*.dSYM
+
+## Playgrounds
+timeline.xctimeline
+playground.xcworkspace
+
+## Swift Package Manager
+.build/
+
+## Other
+.DS_Store

@@ -1,0 +1,23 @@
+# Memory
+
+- Created 2025-12-23 to track Codex changes.
+- Implemented MenuBarExtra UI with toggles, timer controls, and settings access.
+- Added KeepAwakeManager using IOKit power assertions.
+- Added AppState orchestration for manual/timer/schedule/app-rule modes with safeguards.
+- Added models, persistence, logging, notifications, launch-at-login, and power info helpers.
+- Expanded Settings UI tabs for General, Rules, Schedule, Notifications, Advanced, About.
+- Fixed active-reason logging, added explicit delete controls, and surfaced persistence/logging errors.
+- Fixed AppState ObservableObject conformance by importing Combine.
+- Fixed LogStore ObservableObject conformance by importing Combine.
+- Fixed KeepAwakeManager ObservableObject conformance by importing Combine.
+- Added README describing architecture, power assertions, orchestration, and persistence.
+- Added JiggleManager to simulate user activity (mouse movement) to prevent idle status.
+- Updated AppState, Models, PersistenceStore, and UI to support "Simulate Activity" mode.
+- Updated README to include details about JiggleManager and Accessibility requirements.
+- Removed KeepAwakeManager, Schedules, App Rules, and Timers to simplify the app to a dedicated "Jiggler".
+- Updated UI to only show "Simulate Activity" toggle and Logs.
+- Changed Menu Bar Icon to a mouse symbol with a "rainbow" effect (simulated by icon choice) when active.
+- Added slider to Settings to adjust mouse jiggle distance (10-200px).
+- Configured app as UIElement (LSUIElement = YES) to hide from Dock by default.
+- Added "Show in Dock" toggle in Settings to allow user to override this behavior at runtime.
+- Updated App Icon using assets provided in `JiggerMan/Assets/icons`.
