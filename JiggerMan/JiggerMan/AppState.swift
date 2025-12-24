@@ -85,6 +85,7 @@ final class AppState: ObservableObject {
         let active = manualSimulateActivity
         
         jiggleManager.distance = preferences.jiggleDistance
+        jiggleManager.interval = preferences.jiggleInterval
         jiggleManager.isJiggling = active
         isActive = active
         statusText = active ? "On" : "Off"

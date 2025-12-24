@@ -69,6 +69,11 @@ private extension ContentView {
                     Text("Jiggle Distance: \(Int(appState.preferences.jiggleDistance)) px")
                     Slider(value: $appState.preferences.jiggleDistance, in: 10...200, step: 10)
                 }
+                
+                VStack(alignment: .leading) {
+                    Text("Jiggle Interval: \(Int(appState.preferences.jiggleInterval)) sec")
+                    Slider(value: $appState.preferences.jiggleInterval, in: 5...60, step: 5)
+                }
             }
         }
         .padding()

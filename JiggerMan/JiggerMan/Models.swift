@@ -13,6 +13,7 @@ struct Preferences: Codable {
     var logRetentionDays: Int
     var restorePreviousState: Bool
     var jiggleDistance: Double
+    var jiggleInterval: Double
     var showInDock: Bool
 
     static let `default` = Preferences(
@@ -21,6 +22,7 @@ struct Preferences: Codable {
         logRetentionDays: 30,
         restorePreviousState: true,
         jiggleDistance: 50.0,
+        jiggleInterval: 60.0,
         showInDock: false
     )
 }

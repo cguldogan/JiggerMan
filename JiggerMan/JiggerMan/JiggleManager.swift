@@ -21,6 +21,7 @@ final class JiggleManager: ObservableObject {
     }
     
     var distance: Double = 50.0
+    var interval: Double = 5.0
 
     private var timer: Timer?
 
@@ -29,8 +30,8 @@ final class JiggleManager: ObservableObject {
         stopJiggle() // Ensure no duplicate timers
         // Jiggle immediately
         performJiggle()
-        // Then every 60 seconds
-        timer = Timer.scheduledTimer(withTimeInterval: 5.0, repeats: true) { [weak self] _ in
+        // Then every interval
+        timer = Timer.scheduledTimer(withTimeInterval: interval, repeats: true) { [weak self] _ in
             self?.performJiggle()
         }
     }
