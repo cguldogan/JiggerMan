@@ -26,7 +26,7 @@ struct ContentView: View {
                     Label("About", systemImage: "info.circle")
                 }
         }
-        .frame(minWidth: 400, minHeight: 300)
+        .frame(minWidth: 500, minHeight: 350)
     }
 }
 
@@ -100,7 +100,7 @@ private extension ContentView {
                 .font(.title)
                 .fontWeight(.bold)
             
-            Text("Version 1.0")
+            Text("Version \(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0")")
                 .foregroundStyle(.secondary)
             
             Text("Prevents idle status by simulating activity.")

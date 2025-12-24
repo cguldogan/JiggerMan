@@ -23,11 +23,14 @@ jobs:
 
       - name: Build App
         run: |
+          VERSION=${GITHUB_REF#refs/tags/v}
+          echo "Setting version to $VERSION"
           cd JiggerMan
           xcodebuild -scheme JiggerMan \
             -configuration Release \
             -derivedDataPath build \
             -destination 'platform=macOS' \
+            MARKETING_VERSION=$VERSION \
             clean build
 
       - name: Create DMG
