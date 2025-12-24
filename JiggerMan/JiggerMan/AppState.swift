@@ -11,7 +11,17 @@ import Foundation
 
 final class AppState: ObservableObject {
     @Published var manualSimulateActivity: Bool {
-        didSet { scheduleEvaluation(reason: "Manual") }
+        didSet {
+            if manualSimulateActivity && !oldValue {
+                if !checkAccessibilityPermissions() {
+                    DispatchQueue.main.async {
+                        self.manualSimulateActivity = false
+                    }
+                    return
+                }
+            }
+            scheduleEvaluation(reason: "Manual")
+        }
     }
     @Published var preferences: Preferences {
         didSet {
@@ -120,6 +130,11 @@ final class AppState: ObservableObject {
 
     var menuBarIconName: String {
         return isActive ? "cursorarrow.motionlines" : "cursorarrow"
+    }
+
+    private func checkAccessibilityPermissions() -> Bool {
+        let options: NSDictionary = [kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String : true]
+        return AXIsProcessTrustedWithOptions(options)
     }
 
     private func persist() {
