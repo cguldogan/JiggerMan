@@ -16,6 +16,7 @@ final class AppState: ObservableObject {
                 if !checkAccessibilityPermissions() {
                     DispatchQueue.main.async {
                         self.manualSimulateActivity = false
+                        self.openAccessibilitySettings()
                     }
                     return
                 }
@@ -64,6 +65,10 @@ final class AppState: ObservableObject {
             self.manualSimulateActivity = false
         }
 
+        if manualSimulateActivity && !checkAccessibilityPermissions() {
+            self.manualSimulateActivity = false
+        }
+
         LogStore.shared.prune(olderThanDays: preferences.logRetentionDays)
 
         // Apply initial dock state
@@ -101,7 +106,9 @@ final class AppState: ObservableObject {
         
         jiggleManager.distance = preferences.jiggleDistance
         jiggleManager.interval = preferences.jiggleInterval
-        jiggleManager.isJiggling = active
+        if jiggleManager.isJiggling != active {
+            jiggleManager.isJiggling = active
+        }
         isActive = active
         statusText = active ? "On" : "Off"
 
@@ -135,6 +142,13 @@ final class AppState: ObservableObject {
     private func checkAccessibilityPermissions() -> Bool {
         let options: NSDictionary = [kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String : true]
         return AXIsProcessTrustedWithOptions(options)
+    }
+
+    private func openAccessibilitySettings() {
+        guard let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility") else {
+            return
+        }
+        NSWorkspace.shared.open(url)
     }
 
     private func persist() {
