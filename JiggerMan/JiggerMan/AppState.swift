@@ -32,22 +32,11 @@ final class AppState: ObservableObject {
             if oldValue.logRetentionDays != preferences.logRetentionDays {
                 LogStore.shared.prune(olderThanDays: preferences.logRetentionDays)
             }
-            if oldValue.showInDock != preferences.showInDock {
-                // If hiding both Dock and menu bar, force menu bar icon on
-                if !preferences.showInDock && !preferences.showMenuBarIcon {
-                    preferences.showMenuBarIcon = true
-                }
+            if oldValue.showInDock != preferences.showInDock ||
+               oldValue.showMenuBarIcon != preferences.showMenuBarIcon {
+                ensureAtLeastOneVisibleEntry()
                 NSApp.setActivationPolicy(preferences.showInDock ? .regular : .accessory)
                 if preferences.showInDock {
-                    NSApp.applicationIconImage = NSImage(named: "DockIcon")
-                    NSApp.activate(ignoringOtherApps: true)
-                }
-            }
-            if oldValue.showMenuBarIcon != preferences.showMenuBarIcon {
-                // If hiding menu bar icon, ensure Dock is visible
-                if !preferences.showMenuBarIcon && !preferences.showInDock {
-                    preferences.showInDock = true
-                    NSApp.setActivationPolicy(.regular)
                     NSApp.applicationIconImage = NSImage(named: "DockIcon")
                     NSApp.activate(ignoringOtherApps: true)
                 }
@@ -210,6 +199,13 @@ final class AppState: ObservableObject {
     private func checkAccessibilityPermissions() -> Bool {
         let options: NSDictionary = [kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String : true]
         return AXIsProcessTrustedWithOptions(options)
+    }
+
+    /// Ensures at least one of Dock icon or menu bar icon is visible.
+    private func ensureAtLeastOneVisibleEntry() {
+        if !preferences.showInDock && !preferences.showMenuBarIcon {
+            preferences.showMenuBarIcon = true
+        }
     }
 
     private func persist() {
