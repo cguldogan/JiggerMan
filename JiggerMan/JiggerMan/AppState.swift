@@ -20,6 +20,7 @@ final class AppState: ObservableObject {
                     return
                 }
             }
+            updateMouseMovementMonitor()
             scheduleEvaluation(reason: "Manual")
         }
     }
@@ -32,13 +33,27 @@ final class AppState: ObservableObject {
                 LogStore.shared.prune(olderThanDays: preferences.logRetentionDays)
             }
             if oldValue.showInDock != preferences.showInDock {
+                // If hiding both Dock and menu bar, force menu bar icon on
+                if !preferences.showInDock && !preferences.showMenuBarIcon {
+                    preferences.showMenuBarIcon = true
+                }
                 NSApp.setActivationPolicy(preferences.showInDock ? .regular : .accessory)
                 if preferences.showInDock {
-                    // Explicitly set the dock icon to ensure it appears
                     NSApp.applicationIconImage = NSImage(named: "DockIcon")
-                    // When switching to regular, we might want to activate to show the dock icon bouncing/appearing
                     NSApp.activate(ignoringOtherApps: true)
                 }
+            }
+            if oldValue.showMenuBarIcon != preferences.showMenuBarIcon {
+                // If hiding menu bar icon, ensure Dock is visible
+                if !preferences.showMenuBarIcon && !preferences.showInDock {
+                    preferences.showInDock = true
+                    NSApp.setActivationPolicy(.regular)
+                    NSApp.applicationIconImage = NSImage(named: "DockIcon")
+                    NSApp.activate(ignoringOtherApps: true)
+                }
+            }
+            if oldValue.stopOnMouseMovement != preferences.stopOnMouseMovement {
+                updateMouseMovementMonitor()
             }
             scheduleEvaluation(reason: "Preferences")
             persist()
@@ -49,6 +64,9 @@ final class AppState: ObservableObject {
 
     private let jiggleManager = JiggleManager()
     private var lastActive = false
+    private var globalShortcutMonitor: Any?
+    private var localShortcutMonitor: Any?
+    private var mouseMovementMonitor: Any?
 
     init() {
         if let snapshot = PersistenceStore.shared.load() {
@@ -73,7 +91,64 @@ final class AppState: ObservableObject {
         }
 
         NotificationManager.shared.requestAuthorization()
+        registerGlobalShortcut()
+        updateMouseMovementMonitor()
         scheduleEvaluation(reason: "Launch")
+    }
+
+    // MARK: - Global Keyboard Shortcut (Ctrl+Option+J)
+
+    private func registerGlobalShortcut() {
+        // Monitor when app is NOT focused
+        globalShortcutMonitor = NSEvent.addGlobalMonitorForEvents(matching: .keyDown) { [weak self] event in
+            self?.handleShortcutEvent(event)
+        }
+        // Monitor when app IS focused
+        localShortcutMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
+            if self?.handleShortcutEvent(event) == true {
+                return nil // consume the event
+            }
+            return event
+        }
+    }
+
+    @discardableResult
+    private func handleShortcutEvent(_ event: NSEvent) -> Bool {
+        // Ctrl+Option+J
+        let requiredFlags: NSEvent.ModifierFlags = [.control, .option]
+        let pressedFlags = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
+        guard pressedFlags.contains(requiredFlags),
+              event.charactersIgnoringModifiers?.lowercased() == "j" else {
+            return false
+        }
+        DispatchQueue.main.async { [weak self] in
+            self?.manualSimulateActivity.toggle()
+        }
+        return true
+    }
+
+    // MARK: - Mouse Movement Monitor
+
+    private func updateMouseMovementMonitor() {
+        // Remove existing monitor
+        if let monitor = mouseMovementMonitor {
+            NSEvent.removeMonitor(monitor)
+            mouseMovementMonitor = nil
+        }
+
+        // Only install monitor when simulation is active and preference is enabled
+        guard preferences.stopOnMouseMovement, manualSimulateActivity else { return }
+
+        mouseMovementMonitor = NSEvent.addGlobalMonitorForEvents(matching: .mouseMoved) { [weak self] _ in
+            guard let self = self else { return }
+            // Ignore movements caused by our own jiggle
+            guard !self.jiggleManager.isPerformingJiggle else { return }
+            DispatchQueue.main.async {
+                guard self.manualSimulateActivity else { return }
+                self.manualSimulateActivity = false
+                self.log(action: "Jiggler Disabled", reason: "User mouse movement detected")
+            }
+        }
     }
 
     func exportLogs() -> URL? {

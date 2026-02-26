@@ -15,6 +15,8 @@ struct Preferences: Codable {
     var jiggleDistance: Double
     var jiggleInterval: Double
     var showInDock: Bool
+    var showMenuBarIcon: Bool
+    var stopOnMouseMovement: Bool
 
     static let `default` = Preferences(
         launchAtLogin: false,
@@ -23,8 +25,37 @@ struct Preferences: Codable {
         restorePreviousState: true,
         jiggleDistance: 50.0,
         jiggleInterval: 5.0,
-        showInDock: false
+        showInDock: false,
+        showMenuBarIcon: true,
+        stopOnMouseMovement: false
     )
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        launchAtLogin = try container.decode(Bool.self, forKey: .launchAtLogin)
+        notifyOnStartStop = try container.decode(Bool.self, forKey: .notifyOnStartStop)
+        logRetentionDays = try container.decode(Int.self, forKey: .logRetentionDays)
+        restorePreviousState = try container.decode(Bool.self, forKey: .restorePreviousState)
+        jiggleDistance = try container.decode(Double.self, forKey: .jiggleDistance)
+        jiggleInterval = try container.decode(Double.self, forKey: .jiggleInterval)
+        showInDock = try container.decode(Bool.self, forKey: .showInDock)
+        showMenuBarIcon = try container.decodeIfPresent(Bool.self, forKey: .showMenuBarIcon) ?? true
+        stopOnMouseMovement = try container.decodeIfPresent(Bool.self, forKey: .stopOnMouseMovement) ?? false
+    }
+
+    init(launchAtLogin: Bool, notifyOnStartStop: Bool, logRetentionDays: Int,
+         restorePreviousState: Bool, jiggleDistance: Double, jiggleInterval: Double,
+         showInDock: Bool, showMenuBarIcon: Bool = true, stopOnMouseMovement: Bool = false) {
+        self.launchAtLogin = launchAtLogin
+        self.notifyOnStartStop = notifyOnStartStop
+        self.logRetentionDays = logRetentionDays
+        self.restorePreviousState = restorePreviousState
+        self.jiggleDistance = jiggleDistance
+        self.jiggleInterval = jiggleInterval
+        self.showInDock = showInDock
+        self.showMenuBarIcon = showMenuBarIcon
+        self.stopOnMouseMovement = stopOnMouseMovement
+    }
 }
 
 struct LogEntry: Identifiable, Codable {

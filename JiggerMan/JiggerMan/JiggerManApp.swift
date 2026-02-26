@@ -13,7 +13,7 @@ struct JiggerManApp: App {
     @StateObject private var appState = AppState()
 
     var body: some Scene {
-        MenuBarExtra {
+        MenuBarExtra(isInserted: $appState.preferences.showMenuBarIcon) {
             MenuContent(appState: appState)
         } label: {
             Image(systemName: appState.menuBarIconName)

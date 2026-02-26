@@ -64,16 +64,22 @@ private extension ContentView {
                 Toggle("Launch at Login", isOn: $appState.preferences.launchAtLogin)
                 Toggle("Notify on Start/Stop", isOn: $appState.preferences.notifyOnStartStop)
                 Toggle("Show in Dock", isOn: $appState.preferences.showInDock)
+                Toggle("Show Menu Bar Icon", isOn: $appState.preferences.showMenuBarIcon)
+                Toggle("Stop on Mouse Movement", isOn: $appState.preferences.stopOnMouseMovement)
                 
                 VStack(alignment: .leading) {
                     Text("Jiggle Distance: \(Int(appState.preferences.jiggleDistance)) px")
-                    Slider(value: $appState.preferences.jiggleDistance, in: 10...200, step: 10)
+                    Slider(value: $appState.preferences.jiggleDistance, in: 1...200, step: 1)
                 }
                 
                 VStack(alignment: .leading) {
                     Text("Jiggle Interval: \(Int(appState.preferences.jiggleInterval)) sec")
                     Slider(value: $appState.preferences.jiggleInterval, in: 5...60, step: 5)
                 }
+
+                Text("Toggle shortcut: ⌃⌥J (Ctrl+Option+J)")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
             }
         }
         .padding()
