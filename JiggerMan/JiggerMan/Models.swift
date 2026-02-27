@@ -101,4 +101,11 @@ struct LogEntry: Identifiable, Codable, Sendable {
         try container.encode(action, forKey: .action)
         try container.encode(reason, forKey: .reason)
     }
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case date
+        case action
+        case reason
+    }
 }
