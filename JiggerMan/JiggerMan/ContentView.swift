@@ -71,6 +71,10 @@ private extension ContentView {
                     Text("Jiggle Distance: \(Int(appState.preferences.jiggleDistance)) px")
                     Slider(value: $appState.preferences.jiggleDistance, in: 1...200, step: 1)
                 }
+
+                Text("Shortcut: Ctrl + Option + J (start/stop)")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
                 
                 VStack(alignment: .leading) {
                     Text("Jiggle Interval: \(Int(appState.preferences.jiggleInterval)) sec")

@@ -5,9 +5,20 @@ struct MenuContent: View {
     @State private var isHoveringToggle = false
     
     var body: some View {
+        let toggleBinding = Binding<Bool>(
+            get: { appState.manualSimulateActivity },
+            set: { newValue in
+                if appState.manualSimulateActivity != newValue {
+                    DispatchQueue.main.async {
+                        appState.manualSimulateActivity = newValue
+                    }
+                }
+            }
+        )
+
         VStack(alignment: .leading, spacing: 4) {
             // Toggle Row
-            Toggle(isOn: $appState.manualSimulateActivity) {
+            Toggle(isOn: toggleBinding) {
                 Label("Simulate Activity", systemImage: "cursorarrow.motionlines")
                     .font(.body)
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -61,10 +72,8 @@ struct MenuContent: View {
         NSApp.activate(ignoringOtherApps: true)
         if #available(macOS 14.0, *) {
             NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
-        } else if #available(macOS 13.0, *) {
-            NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
         } else {
-            NSApp.sendAction(Selector(("showPreferencesWindow:")), to: nil, from: nil)
+            NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
         }
     }
 }

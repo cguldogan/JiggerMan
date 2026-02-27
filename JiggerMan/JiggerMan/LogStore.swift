@@ -52,8 +52,21 @@ final class LogStore: ObservableObject {
 
     private func load() {
         do {
+            // Check file size to avoid hanging on massive log files (e.g. > 10MB)
+            let attributes = try FileManager.default.attributesOfItem(atPath: fileURL.path)
+            if let fileSize = attributes[.size] as? UInt64, fileSize > 10_000_000 {
+                NSLog("JiggerMan: Log file is too large (\(fileSize) bytes), clearing it.")
+                try FileManager.default.removeItem(at: fileURL)
+                entries = []
+                return
+            }
+            
             let data = try Data(contentsOf: fileURL)
-            entries = try JSONDecoder().decode([LogEntry].self, from: data)
+            var loadedEntries = try JSONDecoder().decode([LogEntry].self, from: data)
+            
+            // Filter out the spammy "Mouse Jiggle" logs from previous versions
+            loadedEntries.removeAll { $0.reason == "Mouse Jiggle" }
+            entries = loadedEntries
         } catch {
             entries = []
             NSLog("JiggerMan: Failed to load logs: \(error.localizedDescription)")
@@ -61,11 +74,15 @@ final class LogStore: ObservableObject {
     }
 
     private func save() {
-        do {
-            let data = try JSONEncoder().encode(entries)
-            try data.write(to: fileURL, options: [.atomic])
-        } catch {
-            NSLog("JiggerMan: Failed to save logs: \(error.localizedDescription)")
+        let entriesToSave = entries
+        let url = fileURL
+        DispatchQueue.global(qos: .background).async {
+            do {
+                let data = try JSONEncoder().encode(entriesToSave)
+                try data.write(to: url, options: [.atomic])
+            } catch {
+                NSLog("JiggerMan: Failed to save logs: \(error.localizedDescription)")
+            }
         }
     }
 }

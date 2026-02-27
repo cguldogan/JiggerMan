@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct Preferences: Codable {
+struct Preferences: Codable, Equatable, Sendable {
     var launchAtLogin: Bool
     var notifyOnStartStop: Bool
     var logRetentionDays: Int
@@ -56,9 +56,36 @@ struct Preferences: Codable {
         self.showMenuBarIcon = showMenuBarIcon
         self.stopOnMouseMovement = stopOnMouseMovement
     }
+
+    // Explicitly implement Encodable to avoid compiler inferring MainActor isolation
+    // from the synthesized conformance.
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(launchAtLogin, forKey: .launchAtLogin)
+        try container.encode(notifyOnStartStop, forKey: .notifyOnStartStop)
+        try container.encode(logRetentionDays, forKey: .logRetentionDays)
+        try container.encode(restorePreviousState, forKey: .restorePreviousState)
+        try container.encode(jiggleDistance, forKey: .jiggleDistance)
+        try container.encode(jiggleInterval, forKey: .jiggleInterval)
+        try container.encode(showInDock, forKey: .showInDock)
+        try container.encode(showMenuBarIcon, forKey: .showMenuBarIcon)
+        try container.encode(stopOnMouseMovement, forKey: .stopOnMouseMovement)
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case launchAtLogin
+        case notifyOnStartStop
+        case logRetentionDays
+        case restorePreviousState
+        case jiggleDistance
+        case jiggleInterval
+        case showInDock
+        case showMenuBarIcon
+        case stopOnMouseMovement
+    }
 }
 
-struct LogEntry: Identifiable, Codable {
+struct LogEntry: Identifiable, Codable, Sendable {
     var id: UUID
     var date: Date
     var action: String
@@ -69,5 +96,22 @@ struct LogEntry: Identifiable, Codable {
         self.date = date
         self.action = action
         self.reason = reason
+    }
+
+    // Explicitly implement Encodable to avoid compiler inferring MainActor isolation
+    // from the synthesized conformance.
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(id, forKey: .id)
+        try container.encode(date, forKey: .date)
+        try container.encode(action, forKey: .action)
+        try container.encode(reason, forKey: .reason)
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case date
+        case action
+        case reason
     }
 }

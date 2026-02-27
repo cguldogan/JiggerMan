@@ -12,10 +12,13 @@ import Foundation
 final class AppState: ObservableObject {
     @Published var manualSimulateActivity: Bool {
         didSet {
+            guard oldValue != manualSimulateActivity else { return }
+            
             if manualSimulateActivity && !oldValue {
                 if !checkAccessibilityPermissions() {
-                    DispatchQueue.main.async {
-                        self.manualSimulateActivity = false
+                    DispatchQueue.main.async { [weak self] in
+                        self?.manualSimulateActivity = false
+                        self?.openAccessibilitySettings()
                     }
                     return
                 }
@@ -26,6 +29,17 @@ final class AppState: ObservableObject {
     }
     @Published var preferences: Preferences {
         didSet {
+            guard oldValue != preferences else { return }
+            
+            if !preferences.showInDock && !preferences.showMenuBarIcon {
+                DispatchQueue.main.async { [weak self] in
+                    guard let self = self else { return }
+                    guard !self.preferences.showInDock && !self.preferences.showMenuBarIcon else { return }
+                    self.preferences.showMenuBarIcon = true
+                }
+                return
+            }
+
             if oldValue.launchAtLogin != preferences.launchAtLogin {
                 LaunchAtLoginManager.shared.setEnabled(preferences.launchAtLogin)
             }
@@ -35,17 +49,19 @@ final class AppState: ObservableObject {
             if oldValue.showInDock != preferences.showInDock ||
                oldValue.showMenuBarIcon != preferences.showMenuBarIcon {
                 ensureAtLeastOneVisibleEntry()
-                NSApp.setActivationPolicy(preferences.showInDock ? .regular : .accessory)
-                if preferences.showInDock {
-                    NSApp.applicationIconImage = NSImage(named: "DockIcon")
-                    NSApp.activate(ignoringOtherApps: true)
+                DispatchQueue.main.async { [weak self] in
+                    guard let self = self else { return }
+                    NSApp.setActivationPolicy(self.preferences.showInDock ? .regular : .accessory)
+                    if self.preferences.showInDock {
+                        NSApp.applicationIconImage = NSImage(named: "DockIcon")
+                        NSApp.activate(ignoringOtherApps: true)
+                    }
                 }
             }
             if oldValue.stopOnMouseMovement != preferences.stopOnMouseMovement {
                 updateMouseMovementMonitor()
             }
             scheduleEvaluation(reason: "Preferences")
-            persist()
         }
     }
     @Published private(set) var isActive = false
@@ -71,6 +87,10 @@ final class AppState: ObservableObject {
             self.manualSimulateActivity = false
         }
 
+        if manualSimulateActivity && !checkAccessibilityPermissions() {
+            self.manualSimulateActivity = false
+        }
+
         LogStore.shared.prune(olderThanDays: preferences.logRetentionDays)
 
         // Apply initial dock state
@@ -88,14 +108,13 @@ final class AppState: ObservableObject {
     // MARK: - Global Keyboard Shortcut (Ctrl+Option+J)
 
     private func registerGlobalShortcut() {
-        // Monitor when app is NOT focused
         globalShortcutMonitor = NSEvent.addGlobalMonitorForEvents(matching: .keyDown) { [weak self] event in
             self?.handleShortcutEvent(event)
         }
-        // Monitor when app IS focused
+
         localShortcutMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
             if self?.handleShortcutEvent(event) == true {
-                return nil // consume the event
+                return nil
             }
             return event
         }
@@ -103,7 +122,6 @@ final class AppState: ObservableObject {
 
     @discardableResult
     private func handleShortcutEvent(_ event: NSEvent) -> Bool {
-        // Ctrl+Option+J
         let requiredFlags: NSEvent.ModifierFlags = [.control, .option]
         let pressedFlags = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
         guard pressedFlags.contains(requiredFlags),
@@ -156,8 +174,13 @@ final class AppState: ObservableObject {
     }
 
     private func scheduleEvaluation(reason: String) {
-        evaluate(reason: reason)
-        persist()
+        // Defer the entire evaluation to avoid "Publishing changes from within view updates"
+        // when triggered by a view binding (like a Toggle)
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self else { return }
+            self.evaluate(reason: reason)
+            self.persist()
+        }
     }
 
     private func evaluate(reason: String) {
@@ -165,9 +188,17 @@ final class AppState: ObservableObject {
         
         jiggleManager.distance = preferences.jiggleDistance
         jiggleManager.interval = preferences.jiggleInterval
-        jiggleManager.isJiggling = active
-        isActive = active
-        statusText = active ? "On" : "Off"
+        if jiggleManager.isJiggling != active {
+            jiggleManager.isJiggling = active
+        }
+        
+        if self.isActive != active {
+            self.isActive = active
+        }
+        let newStatusText = active ? "On" : "Off"
+        if self.statusText != newStatusText {
+            self.statusText = newStatusText
+        }
 
         if lastActive != active {
             if active {
@@ -201,6 +232,13 @@ final class AppState: ObservableObject {
         return AXIsProcessTrustedWithOptions(options)
     }
 
+    private func openAccessibilitySettings() {
+        guard let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility") else {
+            return
+        }
+        NSWorkspace.shared.open(url)
+    }
+
     /// Ensures at least one of Dock icon or menu bar icon is visible.
     private func ensureAtLeastOneVisibleEntry() {
         if !preferences.showInDock && !preferences.showMenuBarIcon {
@@ -209,7 +247,7 @@ final class AppState: ObservableObject {
     }
 
     private func persist() {
-        let snapshot = PersistenceStore.AppStateSnapshot(
+        let snapshot = AppStateSnapshot(
             preferences: preferences,
             manualSimulateActivity: manualSimulateActivity
         )

@@ -12,6 +12,7 @@ import Foundation
 final class JiggleManager: ObservableObject {
     @Published var isJiggling = false {
         didSet {
+            guard oldValue != isJiggling else { return }
             if isJiggling {
                 startJiggle()
             } else {
@@ -73,7 +74,5 @@ final class JiggleManager: ObservableObject {
                 self?.isPerformingJiggle = false
             }
         }
-
-        LogStore.shared.append(LogEntry(action: "Simulated Activity", reason: "Mouse Jiggle"))
     }
 }
