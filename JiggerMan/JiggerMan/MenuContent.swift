@@ -5,9 +5,20 @@ struct MenuContent: View {
     @State private var isHoveringToggle = false
     
     var body: some View {
+        let toggleBinding = Binding<Bool>(
+            get: { appState.manualSimulateActivity },
+            set: { newValue in
+                if appState.manualSimulateActivity != newValue {
+                    DispatchQueue.main.async {
+                        appState.manualSimulateActivity = newValue
+                    }
+                }
+            }
+        )
+
         VStack(alignment: .leading, spacing: 4) {
             // Toggle Row
-            Toggle(isOn: $appState.manualSimulateActivity) {
+            Toggle(isOn: toggleBinding) {
                 Label("Simulate Activity", systemImage: "cursorarrow.motionlines")
                     .font(.body)
                     .frame(maxWidth: .infinity, alignment: .leading)

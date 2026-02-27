@@ -7,7 +7,12 @@
 
 import Foundation
 
-final class PersistenceStore {
+struct AppStateSnapshot: Codable, Sendable {
+    var preferences: Preferences
+    var manualSimulateActivity: Bool
+}
+
+final class PersistenceStore: Sendable {
     static let shared = PersistenceStore()
 
     private let fileURL: URL
@@ -22,11 +27,6 @@ final class PersistenceStore {
             .appendingPathComponent("state.json")
     }
 
-    struct AppStateSnapshot: Codable {
-        var preferences: Preferences
-        var manualSimulateActivity: Bool
-    }
-
     func load() -> AppStateSnapshot? {
         do {
             let data = try Data(contentsOf: fileURL)
@@ -38,11 +38,14 @@ final class PersistenceStore {
     }
 
     func save(snapshot: AppStateSnapshot) {
-        do {
-            let data = try JSONEncoder().encode(snapshot)
-            try data.write(to: fileURL, options: [.atomic])
-        } catch {
-            NSLog("JiggerMan: Failed to save state: \(error.localizedDescription)")
+        let url = fileURL
+        DispatchQueue.global(qos: .background).async {
+            do {
+                let data = try JSONEncoder().encode(snapshot)
+                try data.write(to: url, options: [.atomic])
+            } catch {
+                NSLog("JiggerMan: Failed to save state: \(error.localizedDescription)")
+            }
         }
     }
 }

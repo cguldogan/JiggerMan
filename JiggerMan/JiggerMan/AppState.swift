@@ -12,11 +12,13 @@ import Foundation
 final class AppState: ObservableObject {
     @Published var manualSimulateActivity: Bool {
         didSet {
+            guard oldValue != manualSimulateActivity else { return }
+            
             if manualSimulateActivity && !oldValue {
                 if !checkAccessibilityPermissions() {
-                    DispatchQueue.main.async {
-                        self.manualSimulateActivity = false
-                        self.openAccessibilitySettings()
+                    DispatchQueue.main.async { [weak self] in
+                        self?.manualSimulateActivity = false
+                        self?.openAccessibilitySettings()
                     }
                     return
                 }
@@ -26,23 +28,37 @@ final class AppState: ObservableObject {
     }
     @Published var preferences: Preferences {
         didSet {
+            guard oldValue != preferences else { return }
+            
+            if !preferences.showInDock && !preferences.showMenuBarIcon {
+                DispatchQueue.main.async { [weak self] in
+                    guard let self = self else { return }
+                    guard !self.preferences.showInDock && !self.preferences.showMenuBarIcon else { return }
+                    self.preferences.showMenuBarIcon = true
+                }
+                return
+            }
+
             if oldValue.launchAtLogin != preferences.launchAtLogin {
                 LaunchAtLoginManager.shared.setEnabled(preferences.launchAtLogin)
             }
             if oldValue.logRetentionDays != preferences.logRetentionDays {
                 LogStore.shared.prune(olderThanDays: preferences.logRetentionDays)
             }
-            if oldValue.showInDock != preferences.showInDock {
-                NSApp.setActivationPolicy(preferences.showInDock ? .regular : .accessory)
-                if preferences.showInDock {
-                    // Explicitly set the dock icon to ensure it appears
-                    NSApp.applicationIconImage = NSImage(named: "DockIcon")
-                    // When switching to regular, we might want to activate to show the dock icon bouncing/appearing
-                    NSApp.activate(ignoringOtherApps: true)
+            if oldValue.showInDock != preferences.showInDock ||
+               oldValue.showMenuBarIcon != preferences.showMenuBarIcon {
+                DispatchQueue.main.async { [weak self] in
+                    guard let self = self else { return }
+                    NSApp.setActivationPolicy(self.preferences.showInDock ? .regular : .accessory)
+                    if self.preferences.showInDock {
+                        // Explicitly set the dock icon to ensure it appears
+                        NSApp.applicationIconImage = NSImage(named: "DockIcon")
+                        // When switching to regular, we might want to activate to show the dock icon bouncing/appearing
+                        NSApp.activate(ignoringOtherApps: true)
+                    }
                 }
             }
             scheduleEvaluation(reason: "Preferences")
-            persist()
         }
     }
     @Published private(set) var isActive = false
@@ -50,6 +66,8 @@ final class AppState: ObservableObject {
 
     private let jiggleManager = JiggleManager()
     private var lastActive = false
+    private var globalShortcutMonitor: Any?
+    private var localShortcutMonitor: Any?
 
     init() {
         if let snapshot = PersistenceStore.shared.load() {
@@ -78,7 +96,36 @@ final class AppState: ObservableObject {
         }
 
         NotificationManager.shared.requestAuthorization()
+        registerGlobalShortcut()
         scheduleEvaluation(reason: "Launch")
+    }
+
+    private func registerGlobalShortcut() {
+        globalShortcutMonitor = NSEvent.addGlobalMonitorForEvents(matching: .keyDown) { [weak self] event in
+            self?.handleShortcutEvent(event)
+        }
+
+        localShortcutMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
+            if self?.handleShortcutEvent(event) == true {
+                return nil
+            }
+            return event
+        }
+    }
+
+    @discardableResult
+    private func handleShortcutEvent(_ event: NSEvent) -> Bool {
+        let requiredFlags: NSEvent.ModifierFlags = [.control, .option]
+        let pressedFlags = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
+        guard pressedFlags.contains(requiredFlags),
+              event.charactersIgnoringModifiers?.lowercased() == "j" else {
+            return false
+        }
+
+        DispatchQueue.main.async { [weak self] in
+            self?.manualSimulateActivity.toggle()
+        }
+        return true
     }
 
     func exportLogs() -> URL? {
@@ -97,8 +144,13 @@ final class AppState: ObservableObject {
     }
 
     private func scheduleEvaluation(reason: String) {
-        evaluate(reason: reason)
-        persist()
+        // Defer the entire evaluation to avoid "Publishing changes from within view updates"
+        // when triggered by a view binding (like a Toggle)
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self else { return }
+            self.evaluate(reason: reason)
+            self.persist()
+        }
     }
 
     private func evaluate(reason: String) {
@@ -109,8 +161,14 @@ final class AppState: ObservableObject {
         if jiggleManager.isJiggling != active {
             jiggleManager.isJiggling = active
         }
-        isActive = active
-        statusText = active ? "On" : "Off"
+        
+        if self.isActive != active {
+            self.isActive = active
+        }
+        let newStatusText = active ? "On" : "Off"
+        if self.statusText != newStatusText {
+            self.statusText = newStatusText
+        }
 
         if lastActive != active {
             if active {
@@ -152,7 +210,7 @@ final class AppState: ObservableObject {
     }
 
     private func persist() {
-        let snapshot = PersistenceStore.AppStateSnapshot(
+        let snapshot = AppStateSnapshot(
             preferences: preferences,
             manualSimulateActivity: manualSimulateActivity
         )
